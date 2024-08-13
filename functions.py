@@ -66,13 +66,13 @@ class ModelModule:
         return self.model, self.optimizer, self.scheduler
 
 
-# Ê¹ÓÃÊ¾Àı
+
 if __name__ == '__main__':
-    # ³õÊ¼»¯Êı¾İ¼ÓÔØÄ£¿é
+    # åˆå§‹åŒ–æ•°æ®åŠ è½½æ¨¡å—
     data_module = DataLoaderModule()
     tokenizer, dataset, loader = data_module.get_loader()
 
-    # ³õÊ¼»¯Ä£ĞÍÄ£¿é
+    # åˆå§‹åŒ–æ¨¡å‹æ¨¡å—
     model_module = ModelModule()
     model, optimizer, scheduler = model_module.get_model_components()
 
