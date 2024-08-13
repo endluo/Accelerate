@@ -1,25 +1,34 @@
 import torch
-from functions import get_loader, get_model
+from functions import DataLoaderModule, ModelModule
 import random
 from accelerate import Accelerator
 import datetime
 import os
 
-# ÉèÖÃËæ»úÊıÖÖ×Ó£¬È·±£ÊµÑéµÄ¿ÉÖØ¸´ĞÔ
+# è®¾ç½®éšæœºæ•°ç§å­ï¼Œç¡®ä¿å®éªŒçš„å¯é‡å¤æ€§
 def set_random_seed(seed=0):
     random.seed(seed)
     torch.manual_seed(seed)
     torch.cuda.manual_seed_all(seed)
 
-# ³õÊ¼»¯¼ÓËÙÆ÷ºÍÄ£ĞÍ¡¢ÓÅ»¯Æ÷¡¢µ÷¶ÈÆ÷
+# åˆå§‹åŒ–åŠ é€Ÿå™¨å’Œæ¨¡å‹ã€ä¼˜åŒ–å™¨ã€è°ƒåº¦å™¨
 def initialize_components():
     accelerator = Accelerator()
-    _, _, loader = get_loader(text_lens=1)
-    model, optimizer, scheduler = get_model(num_hidden_layers=4)
+
+    # å®ä¾‹åŒ–DataLoaderModuleå¹¶è·å–loader
+    data_module = DataLoaderModule(text_lens=1)
+    _, _, loader = data_module.get_loader()
+
+    # å®ä¾‹åŒ–ModelModuleå¹¶è·å–model, optimizer, scheduler
+    model_module = ModelModule(num_hidden_layers=4)
+    model, optimizer, scheduler = model_module.get_model_components()
+
+    # ä½¿ç”¨acceleratorå‡†å¤‡æ•°æ®å’Œæ¨¡å‹
     loader, model, optimizer, scheduler = accelerator.prepare(loader, model, optimizer, scheduler)
+    
     return accelerator, loader, model, optimizer, scheduler
 
-# ´òÓ¡¼ÓËÙÆ÷Ïà¹ØĞÅÏ¢
+# æ‰“å°åŠ é€Ÿå™¨ç›¸å…³ä¿¡æ¯
 def print_accelerator_info(accelerator):
     print('rank=', os.environ.get('RANK', None))
     print('local_rank=', os.environ.get('LOCAL_RANK', None))
@@ -27,7 +36,7 @@ def print_accelerator_info(accelerator):
     print('accelerator.is_local_main_process=', accelerator.is_local_main_process)
     print('accelerator.is_main_process=', accelerator.is_main_process)
 
-# ÑµÁ·¹ı³Ì
+# è®­ç»ƒè¿‡ç¨‹
 def train(loader, model, optimizer, scheduler, accelerator):
     start_time = datetime.datetime.now()
     for i, data in enumerate(loader):
@@ -47,7 +56,7 @@ def train(loader, model, optimizer, scheduler, accelerator):
 
     print(f"Training completed in: {datetime.datetime.now() - start_time}")
 
-# ±£´æÄ£ĞÍ
+# ä¿å­˜æ¨¡å‹
 def save_model_if_main_process(accelerator, model):
     accelerator.wait_for_everyone()
     if accelerator.is_main_process and accelerator.is_local_main_process:
