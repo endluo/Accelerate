@@ -1,2 +1,2 @@
 # accelerate
-accelerate train
+多卡调度训练
